@@ -78,8 +78,8 @@ def zotero_roots() -> list[Path]:
             ]
         )
 
-    # Useful fallback when scripts run under shells whose platform config is odd.
-    roots.append(home / "Library/Application Support/Zotero")
+    else:
+        roots.append(home / "Library/Application Support/Zotero")
     return list(dict.fromkeys(roots))
 
 
@@ -244,6 +244,28 @@ def query(params: dict[str, str | int | bool | None]) -> str:
     return urllib.parse.urlencode(clean)
 
 
+def find_zotero_exe() -> str | None:
+    """Locate Zotero executable on Windows to avoid PATH / store resolution issues."""
+    if platform.system() != "Windows":
+        return "zotero"
+
+    candidates = [
+        r"C:\Program Files\Zotero\zotero.exe",
+        r"C:\Program Files (x86)\Zotero\zotero.exe",
+    ]
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Zotero") as key:
+            install_dir, _ = winreg.QueryValueEx(key, "InstallLocation")
+            candidates.insert(0, os.path.join(install_dir, "zotero.exe"))
+    except (FileNotFoundError, OSError):
+        pass
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    return None
+
+
 def restart_zotero(wait_for_api: bool = True) -> bool:
     system = platform.system()
     try:
@@ -265,10 +287,14 @@ def restart_zotero(wait_for_api: bool = True) -> bool:
                 check=False,
             )
             time.sleep(1)
-            subprocess.Popen(["zotero.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            zotero_path = find_zotero_exe()
+            if zotero_path:
+                subprocess.Popen([zotero_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                return False
         else:
             subprocess.run(
-                ["pkill", "-f", "zotero"],
+                ["pkill", "-x", "zotero"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=False,
@@ -371,7 +397,13 @@ def export_bibtex(item_key: str | None = None, *, include_children: bool = False
     endpoint = "items" if include_children else "items/top"
     start = 0
     chunks: list[str] = []
+    max_pages = 1000  # safety guard against infinite loops
+    pages = 0
     while True:
+        pages += 1
+        if pages > max_pages:
+            exit_with(f"export_bibtex exceeded safe page limit ({max_pages})")
+
         params = query(
             {
                 "format": "bibtex",
@@ -672,8 +704,8 @@ def cmd_cite(args: argparse.Namespace) -> None:
     citekey, added = append_bib_entry(
         Path(args.bib).expanduser().resolve(), export_bibtex(item_key)
     )
-    citation = f"\\cite{{{citekey}}}" if args.tex else f"[@{citekey}]"
-    target = Path(args.tex or args.markdown).expanduser().resolve()
+    citation = f"\\cite{{{citekey}}}" if args.tex is not None else f"[@{citekey}]"
+    target = Path(args.tex if args.tex is not None else args.markdown).expanduser().resolve()
     insert_citation(target, citation, args.marker)
     dump_json(
         {

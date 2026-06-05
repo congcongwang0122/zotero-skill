@@ -100,7 +100,7 @@ Get-ChildItem "$env:USERPROFILE\Zotero\storage\HQV9AFD4"
 
 Install pdfplumber (requires Python):
 ```bash
-python3 -m pip install pdfplumber
+py -m pip install pdfplumber
 ```
 
 Extract text:
@@ -128,25 +128,27 @@ $python = "C:\Users\{user}\.cache\codex-runtimes\codex-primary-runtime\dependenc
 When available, the stdlib-only helper script provides convenience:
 
 ```bash
-python3 <skill-root>/scripts/zotero.py <command>
+py <skill-root>/scripts/zotero.py <command>
 ```
+
+> **Note for macOS/Linux users:** Use `python3` instead of `py` if the `py` launcher is not available.
 
 ### Fast starts
 
 Check readiness:
 ```bash
-python3 scripts/zotero.py status --json
+py scripts/zotero.py status --json
 ```
 
 Enable local API and restart Zotero:
 ```bash
-python3 scripts/zotero.py enable --restart
+py scripts/zotero.py enable --restart
 ```
 
 Search and export:
 ```bash
-python3 scripts/zotero.py search "transformer" --json
-python3 scripts/zotero.py export-bibtex --out references.bib
+py scripts/zotero.py search "transformer" --json
+py scripts/zotero.py export-bibtex --out references.bib
 ```
 
 ## Workflow
