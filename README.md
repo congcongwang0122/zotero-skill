@@ -48,6 +48,7 @@
 ---
 
 ## 快速开始
+<img width="1293" height="1317" alt="8a8083ce873159c3e3ffadb2d4fba694" src="https://github.com/user-attachments/assets/90091051-6046-4b40-aced-0636d18a2beb" />
 
 ```bash
 # 1. 确保 Zotero 桌面客户端已打开
