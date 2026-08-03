@@ -155,7 +155,7 @@ zotero-skill/
 
 - **GitHub**: https://github.com/congcongwang0122/zotero-skill
 - **License**: MIT
-- **适用平台**: 任何支持 Skill 扩展的 AI 助手平台（Claude Code、Codex、Cursor 等）
+- **适用平台**: 任何支持 Skill 扩展的 AI 助手平台（Hermes、Claude Code、Codex、Cursor 等）
 
 ---
 
